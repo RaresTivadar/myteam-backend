@@ -28,17 +28,41 @@ exports.getTeams = async (req, res) => {
 };
 
 exports.getTeamUsers = async (req, res) => {
-  const { teamId } = req.params;
   try {
-    const users = await User.find({ team: teamId });
-    if (!users.length) {
-      return res.status(404).send({ error: 'No users found for this team' });
+    const { teamId } = req.params;
+    const team = await Team.findById(teamId).populate('coaches').populate('players');
+
+    if (!team) {
+      return res.status(404).send({ message: 'Team not found' });
     }
-    res.send(users);
+
+    res.status(200).send({
+      teamName: team.name,
+      coaches: team.coaches,
+      players: team.players
+    });
   } catch (error) {
-    res.status(500).send(error);
+    res.status(500).send({ message: 'Error fetching team users', error });
   }
 };
+exports.getTeamUsers = async (req, res) => {
+  try {
+    const { teamId } = req.params;
+    const team = await Team.findById(teamId).populate('coaches').populate('players');
+
+    if (!team) {
+      return res.status(404).send({ message: 'Team not found' });
+    }
+
+    res.status(200).send({
+      coaches: team.coaches,
+      players: team.players
+    });
+  } catch (error) {
+    res.status(500).send({ message: 'Error fetching team users', error });
+  }
+};
+
 
 exports.updateTeam = async (req, res) => {
   const { teamId } = req.params;
@@ -73,25 +97,6 @@ exports.getAllTeams = async (req, res) => {
     res.send(teams);
   } catch (error) {
     res.status(500).send({ message: 'Error fetching teams', error: error.message });
-  }
-};
-
-exports.getTeamUsers = async (req, res) => {
-  try {
-    const { teamId } = req.params;
-    const team = await Team.findById(teamId).populate('users');
-
-    if (!team) {
-      return res.status(404).send({ message: 'Team not found' });
-    }
-
-    const teamUsers = {
-      users: team.users,
-    };
-
-    res.status(200).send(teamUsers);
-  } catch (error) {
-    res.status(500).send({ message: 'Error fetching team users', error });
   }
 };
 exports.getTeamById = async (req, res) => {
