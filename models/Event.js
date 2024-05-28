@@ -30,7 +30,12 @@ const eventSchema = new mongoose.Schema({
   description: String,
   latitude: Number,
   longitude: Number,
-  stadium: String
+  stadium: String,
+  team: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Team',
+    required: true
+  }
 });
 
 const Event = mongoose.model('Event', eventSchema);

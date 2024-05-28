@@ -7,5 +7,6 @@ router.patch('/:id', eventController.updateEvent);
 router.delete('/:id', eventController.deleteEvent);
 router.get('/', eventController.getAllEvents);
 router.get('/type/:type', eventController.getEventsByType); 
+router.get('/team/:teamId', eventController.getEventsByTeam); 
 
 module.exports = router;

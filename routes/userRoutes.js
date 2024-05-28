@@ -13,6 +13,6 @@ router.patch('/assign-team/:userId/:teamId', userController.assignTeamToUser);
 router.patch('/remove-team/:userId/:teamId', userController.removeTeamFromUser);
 router.get('/:userId/teams', userController.getUserTeams);
 router.get('/:userId', userController.getUserDetails); 
-
+router.get('/team/:teamId', userController.getUsersByTeam); 
 
 module.exports = router;

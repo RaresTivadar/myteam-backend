@@ -203,3 +203,12 @@ exports.getUserDetails = async (req, res) => {
     res.status(500).send(error);
   }
 };
+exports.getUsersByTeam = async (req, res) => {
+  try {
+    const { teamId } = req.params;
+    const users = await User.find({ team: teamId });
+    res.send(users);
+  } catch (error) {
+    res.status(500).send({ message: 'Error fetching users by team', error });
+  }
+};
