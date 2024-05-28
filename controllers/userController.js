@@ -3,7 +3,7 @@ const Team = require('../models/Team');
 const bcrypt = require('bcryptjs');
 
 exports.signupUser = async (req, res) => {
-  const { email, team } = req.body;
+  const { email, password, role, accessCode } = req.body;
 
   try {
     const existingUser = await User.findOne({ email });
@@ -13,23 +13,17 @@ exports.signupUser = async (req, res) => {
 
     const user = new User(req.body);
 
-    if (team) {
-      await Promise.all(team.map(async (teamId) => {
-        const team = await Team.findById(teamId);
-        if (!team) {
-          throw new Error(`Team not found for ID: ${teamId}`);
-        }
-        if (user.role === 'coach') {
-          team.coaches.push(user._id);
-        } else if (user.role === 'player') {
-          team.players.push(user._id);
-        }
-        await team.save();
-      }));
+    if (role === 'player' && accessCode) {
+      const team = await Team.findOne({ accessCode });
+      if (!team) {
+        return res.status(400).send({ error: 'Invalid access code' });
+      }
+      team.players.push(user._id);
+      await team.save();
+      user.team = team._id;
     }
+
     await user.save();
-
-
     res.status(201).send({ user, message: 'User registered successfully' });
   } catch (error) {
     res.status(500).send({ error: 'Internal server error', details: error.message });
@@ -38,27 +32,40 @@ exports.signupUser = async (req, res) => {
 
 exports.loginUser = async (req, res) => {
   try {
-    const user = await User.findOne({ email: req.body.email });
-    if (!user) {
-      return res.status(400).send({ error: 'Login failed!' });
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).send({ error: 'Email and password are required' });
     }
 
-    const isMatch = await bcrypt.compare(req.body.password, user.password);
-    if (!isMatch) {
-      return res.status(400).send({ error: 'Login failed!' });
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).send({ error: 'Login failed! User not found.' });
+    }
+
+    if (password !== user.password) {
+      return res.status(400).send({ error: 'Login failed! Invalid password.' });
     }
 
     res.send({ user });
   } catch (error) {
-    res.status(500).send(error);
+    console.error('Login error:', error); 
+    res.status(500).send({ error: 'Internal server error' });
   }
 };
+
 exports.updateUser = async (req, res) => {
   try {
     const { userId } = req.params;
     const updates = req.body;
 
-    delete updates.role;
+    if (updates.birthdate) {
+      const selectedDate = new Date(updates.birthdate);
+      const currentDate = new Date();
+      if (selectedDate > currentDate) {
+        return res.status(400).send({ error: 'Birthdate cannot be in the future' });
+      }
+    }
 
     const user = await User.findByIdAndUpdate(userId, updates, { new: true, runValidators: true });
     
@@ -68,9 +75,10 @@ exports.updateUser = async (req, res) => {
 
     res.send(user);
   } catch (error) {
-    res.status(400).send(error);
+    res.status(400).send({ error: 'Failed to update user', details: error.message });
   }
 };
+
 exports.deleteUser = async (req, res) => {
   const userId = req.params.id;
   try {
@@ -162,8 +170,36 @@ exports.getUserTeams = async (req, res) => {
     if (!user) {
       return res.status(404).send({ error: 'User not found' });
     }
-    res.status(200).send({team: user.team });
+    res.status(200).send({ team: user.team });
   } catch (error) {
     res.status(500).send({ error: 'Internal server error', details: error.message });
+  }
+};
+exports.getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find({});
+    res.send(users);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+};
+exports.getAllUsersAttendance = async (req, res) => {
+  try {
+    const users = await User.find({ role: 'player' });
+    res.send(users);
+  } catch (error) {
+    res.status(500).send(error);
+  }
+};
+exports.getUserDetails = async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const user = await User.findById(userId).populate('team');
+    if (!user) {
+      return res.status(404).send({ error: 'User not found' });
+    }
+    res.send(user);
+  } catch (error) {
+    res.status(500).send(error);
   }
 };

@@ -14,6 +14,11 @@ const teamSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   }],
+  accessCode: {
+    type: String,
+    required: true,
+    unique: true
+  }
 });
 
 const Team = mongoose.model('Team', teamSchema);

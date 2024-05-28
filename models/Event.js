@@ -27,7 +27,10 @@ const eventSchema = new mongoose.Schema({
       required: true
     }
   }],
-  description: String
+  description: String,
+  latitude: Number,
+  longitude: Number,
+  stadium: String
 });
 
 const Event = mongoose.model('Event', eventSchema);

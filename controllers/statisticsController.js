@@ -1,5 +1,6 @@
 const Statistics = require('../models/Statistics');
-const User = require('../models/User');
+const Team = require('../models/Team');
+const User = require('../models/User'); // Ensure User model is imported
 
 exports.createStatistics = async (req, res) => {
   try {
@@ -67,5 +68,33 @@ exports.deleteStatistics = async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(500).send({ error: 'Failed to delete statistics', details: error.toString() });
+  }
+};
+
+exports.getStatisticsByTeam = async (req, res) => {
+  try {
+    const { teamId } = req.params;
+    const team = await Team.findById(teamId).populate('players');
+    if (!team) {
+      return res.status(404).send({ error: 'Team not found' });
+    }
+
+    // Fetch statistics for each player
+    const stats = await Promise.all(
+      team.players.map(async (player) => {
+        let playerStats = await Statistics.findOne({ user: player._id }).populate('user', 'name surname');
+        if (!playerStats) {
+          // If no stats found, create default stats
+          playerStats = new Statistics({ user: player._id, matchesPlayed: 0, goals: 0, assists: 0 });
+          await playerStats.save();
+        }
+        return playerStats;
+      })
+    );
+
+    res.send(stats);
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ error: 'Failed to fetch team statistics', details: error.toString() });
   }
 };

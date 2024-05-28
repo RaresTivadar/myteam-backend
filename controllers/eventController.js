@@ -12,7 +12,7 @@ exports.createEvent = async (req, res) => {
 
 exports.updateEvent = async (req, res) => {
   const updates = Object.keys(req.body);
-  const allowedUpdates = ['name', 'eventType', 'date', 'location', 'score', 'description', 'attendees'];
+  const allowedUpdates = ['name', 'eventType', 'date', 'location', 'score', 'description', 'attendees', 'latitude', 'longitude', 'stadium', 'teams'];
   const isValidOperation = updates.every(update => allowedUpdates.includes(update));
 
   if (!isValidOperation) {
@@ -45,18 +45,9 @@ exports.deleteEvent = async (req, res) => {
   }
 };
 
-exports.getAllEvents = async (req, res) => {
-  try {
-    const events = await Event.find({});
-    res.send(events);
-  } catch (error) {
-    res.status(500).send(error);
-  }
-};
-
 exports.getEventsByType = async (req, res) => {
   try {
-    const events = await Event.find({ eventType: req.params.type });
+    const events = await Event.find({ eventType: req.params.type }).populate('attendees.user');
     res.send(events);
   } catch (error) {
     res.status(500).send(error);
@@ -75,5 +66,14 @@ exports.getAttendancesForUser = async (req, res) => {
     res.send(attendances);
   } catch (error) {
     res.status(500).send({ error: 'Failed to retrieve attendance', details: error.message });
+  }
+};
+
+exports.getAllEvents = async (req, res) => {
+  try {
+    const events = await Event.find({}).populate('attendees.user');
+    res.send(events);
+  } catch (error) {
+    res.status(500).send(error);
   }
 };
