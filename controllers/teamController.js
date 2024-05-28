@@ -5,9 +5,7 @@ exports.createTeam = async (req, res) => {
   try {
     const team = new Team(req.body);
     await team.save();
-
-    // Add the team to the coach's teams array
-    const coachId = req.body.coaches[0]; // Assuming the first coach is the creator
+    const coachId = req.body.coaches[0]; 
     const coach = await User.findById(coachId);
     if (coach) {
       coach.team.push(team._id);

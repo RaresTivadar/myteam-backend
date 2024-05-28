@@ -1,6 +1,6 @@
 const Statistics = require('../models/Statistics');
 const Team = require('../models/Team');
-const User = require('../models/User'); // Ensure User model is imported
+const User = require('../models/User');
 
 exports.createStatistics = async (req, res) => {
   try {
@@ -79,12 +79,10 @@ exports.getStatisticsByTeam = async (req, res) => {
       return res.status(404).send({ error: 'Team not found' });
     }
 
-    // Fetch statistics for each player
     const stats = await Promise.all(
       team.players.map(async (player) => {
         let playerStats = await Statistics.findOne({ user: player._id }).populate('user', 'name surname');
         if (!playerStats) {
-          // If no stats found, create default stats
           playerStats = new Statistics({ user: player._id, matchesPlayed: 0, goals: 0, assists: 0 });
           await playerStats.save();
         }

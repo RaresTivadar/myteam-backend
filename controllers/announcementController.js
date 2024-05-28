@@ -15,7 +15,7 @@ exports.createAnnouncement = async (req, res) => {
 exports.getAllAnnouncements = async (req, res) => {
   try {
     const { teamId } = req.params;
-    console.log('Team ID in backend:', teamId); // Log the teamId
+    console.log('Team ID in backend:', teamId);
     const announcements = await Announcement.find({ team: teamId });
     res.status(200).send(announcements);
   } catch (error) {
