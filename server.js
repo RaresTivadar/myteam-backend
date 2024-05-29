@@ -11,7 +11,6 @@ const statisticsRoutes = require('./routes/statisticsRoutes');
 const rankingRoutes = require('./routes/rankingRoutes');
 const contactRoutes = require('./routes/contactRoutes');
 
-
 const app = express();
 
 app.use(cors());
